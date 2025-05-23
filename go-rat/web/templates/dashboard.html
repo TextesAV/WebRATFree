@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2>Connected Clients</h2>
+    {{if .Clients}}
+    <table>
+        <thead>
+            <tr>
+                <th>Connection ID</th>
+                <th>Stub ID</th>
+                <th>OS</th>
+                <th>Architecture</th>
+                <th>IP Address</th>
+                <th>Connected Since</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Clients}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td>{{.StubID}}</td>
+                <td>{{.OS}}</td>
+                <td>{{.Arch}}</td>
+                <td>{{.IPAddress}}</td>
+                <td>{{.ConnectTime.Format "2006-01-02 15:04:05"}}</td>
+                <td>Connected</td> <!-- Basic status for now -->
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    {{else}}
+    <p>No clients connected.</p>
+    {{end}}
+    <p><a href="/builder">Go to Builder</a></p>
+    <form action="/logout" method="post">
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>
