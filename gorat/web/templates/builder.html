@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stub Builder - GoRAT</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        header { background-color: #333; color: white; padding: 1em; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; }
+        header nav a { color: white; text-decoration: none; padding: 0.5em; margin-left: 0.5em; }
+        header nav a:hover { background-color: #555; }
+        .container { padding: 2em; max-width: 800px; margin: auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
+        h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.5em; }
+        label { display: block; margin-top: 1em; margin-bottom: 0.5em; color: #555; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 0.8em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        input[type="checkbox"] { margin-right: 0.5em; vertical-align: middle; }
+        .form-group { margin-bottom: 1.5em; }
+        button { padding: 0.8em 1.5em; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        button:hover { background-color: #0056b3; }
+        .error-message { background-color: #f8d7da; color: #721c24; padding: 0.75em; margin-bottom: 1em; border: 1px solid #f5c6cb; border-radius: 4px; }
+        .success-message { background-color: #d4edda; color: #155724; padding: 0.75em; margin-bottom: 1em; border: 1px solid #c3e6cb; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GoRAT</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/builder">Builder</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+    <div class="container">
+        <h2>Stub Builder</h2>
+        <!-- Placeholder for error/success messages from server (e.g., via query params or JS) -->
+        <form action="/build" method="POST">
+            <div class="form-group">
+                <label for="server_ip">Server IP Address or Hostname:</label>
+                <input type="text" id="server_ip" name="server_ip" value="localhost" required>
+            </div>
+            <div class="form-group">
+                <label for="server_port">Server Port:</label>
+                <input type="number" id="server_port" name="server_port" value="8080" required min="1" max="65535">
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="admin_mode" name="admin_mode" value="true">
+                <label for="admin_mode" style="display: inline;">Enable Admin Mode (Placeholder)</label>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="enable_watchdog" name="enable_watchdog" value="true">
+                <label for="enable_watchdog" style="display: inline;">Enable Watchdog (Placeholder)</label>
+            </div>
+            <button type="submit">Build Stub</button>
+        </form>
+    </div>
+</body>
+</html>
